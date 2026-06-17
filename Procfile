@@ -1,1 +1,1 @@
-python korean_zone_bot.py
+worker: python korean_zone_bot.py 
