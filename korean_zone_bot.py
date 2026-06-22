@@ -7,16 +7,22 @@ from groq import Groq
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Poll
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, ChatMemberHandler,
-    CallbackQueryHandler, ContextTypes, filters, JobQueue
+    CallbackQueryHandler, ContextTypes, filters
 )
 from telegram.constants import ChatMemberStatus
 
 # ============================================================
-# SOZLAMALAR - BU YERGA O'Z KALITLARINGIZNI KIRITING
+# SOZLAMALAR — Railway "Variables" bo'limidan o'qiladi
+# Bu yerga hech qachon token/key ni to'g'ridan-to'g'ri yozmang!
 # ============================================================
-TELEGRAM_TOKEN = "8997035727:AAGtUfnNgnM3e5lBBWkPt9fuRA7wiRuzzOQ"
-GROQ_API_KEY = "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"
-CHANNEL_ID = "@Koreanzonehelper_bot"  # Kanal username ini o'zgartiring, masalan: @KoreanZoneUz
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+CHANNEL_ID = os.environ.get("CHANNEL_ID", "@Koreanzone_tg")
+
+if not TELEGRAM_TOKEN:
+    raise RuntimeError("TELEGRAM_TOKEN topilmadi! Railway > Variables bo'limiga qo'shing.")
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY topilmadi! Railway > Variables bo'limiga qo'shing.")
 
 # ============================================================
 # LOGGING
@@ -116,7 +122,7 @@ async def generate_ai_content(prompt: str) -> str:
 async def send_daily_word(context: ContextTypes.DEFAULT_TYPE):
     """Har kuni ertalab yangi so'z yuborish"""
     word_data = random.choice(KOREAN_WORDS)
-    
+
     message = f"""🇰🇷 *Kunlik So'z — Word of the Day*
 
 ✨ *{word_data['word']}*
@@ -127,7 +133,7 @@ async def send_daily_word(context: ContextTypes.DEFAULT_TYPE):
 _{word_data['example']}_
 
 ━━━━━━━━━━━━━━
-📚 @KoreanZoneUz — Koreys tilini o'rganamiz!"""
+📚 {CHANNEL_ID} — Koreys tilini o'rganamiz!"""
 
     try:
         await context.bot.send_message(
@@ -145,7 +151,7 @@ _{word_data['example']}_
 async def send_weekly_grammar(context: ContextTypes.DEFAULT_TYPE):
     """Har hafta grammatika darsi yuborish"""
     lesson = random.choice(GRAMMAR_LESSONS)
-    
+
     message = f"""📚 *Haftalik Grammatika Darsi*
 
 *{lesson['title']}*
@@ -153,7 +159,7 @@ async def send_weekly_grammar(context: ContextTypes.DEFAULT_TYPE):
 {lesson['content']}
 
 ━━━━━━━━━━━━━━
-🎓 @KoreanZoneUz — Koreys tilini o'rganamiz!"""
+🎓 {CHANNEL_ID} — Koreys tilini o'rganamiz!"""
 
     try:
         await context.bot.send_message(
@@ -170,16 +176,15 @@ async def send_weekly_grammar(context: ContextTypes.DEFAULT_TYPE):
 async def send_daily_quiz(context: ContextTypes.DEFAULT_TYPE):
     """Kunlik viktorina yuborish"""
     word_data = random.choice(KOREAN_WORDS)
-    
-    # To'g'ri javob va 3 ta noto'g'ri javob
+
     correct = word_data['meaning']
     all_meanings = [w['meaning'] for w in KOREAN_WORDS if w['meaning'] != correct]
-    wrong_answers = random.sample(all_meanings, 3)
-    
+    wrong_answers = random.sample(all_meanings, min(3, len(all_meanings)))
+
     options = wrong_answers + [correct]
     random.shuffle(options)
     correct_index = options.index(correct)
-    
+
     try:
         await context.bot.send_poll(
             chat_id=CHANNEL_ID,
@@ -200,17 +205,16 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """Yangi a'zoga xush kelibsiz xabari"""
     if update.chat_member is None:
         return
-    
+
     new_member = update.chat_member.new_chat_member
     old_member = update.chat_member.old_chat_member
-    
-    # Yangi a'zo qo'shilgan bo'lsa
+
     if (old_member.status in [ChatMemberStatus.LEFT, ChatMemberStatus.BANNED] and
             new_member.status == ChatMemberStatus.MEMBER):
-        
+
         user = new_member.user
         name = user.first_name or "Do'st"
-        
+
         welcome_text = f"""🇰🇷 *Annyeonghaseyo, {name}!* 안녕하세요!
 
 *Korean Zone* kanaliga xush kelibsiz! 🌸
@@ -251,43 +255,36 @@ async def check_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Spam xabarlarni aniqlash va o'chirish"""
     if update.message is None:
         return
-    
+
     message = update.message
     user = message.from_user
     text = message.text or message.caption or ""
-    
-    # Admin tekshirish
+
     try:
         chat_member = await context.bot.get_chat_member(message.chat_id, user.id)
         if chat_member.status in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
-            return  # Adminlarni tekshirmaymiz
-    except:
+            return
+    except Exception:
         pass
-    
+
     is_spam = False
-    
-    # Spam so'zlar tekshirish
+
     text_lower = text.lower()
     for spam_word in SPAM_WORDS:
         if spam_word in text_lower:
             is_spam = True
             break
-    
-    # Havolalar tekshirish (adminlar bundan mustasno)
+
     if message.entities:
         for entity in message.entities:
             if entity.type in ["url", "text_link"]:
                 is_spam = True
                 break
-    
+
     if is_spam:
         try:
-            # Xabarni o'chirish
             await message.delete()
-            # Foydalanuvchini ban qilish
             await context.bot.ban_chat_member(message.chat_id, user.id)
-            
-            # Admin ga xabar
             await context.bot.send_message(
                 chat_id=message.chat_id,
                 text=f"🚫 {user.first_name} spam yuborgan. Foydalanuvchi bloklandi.",
@@ -301,7 +298,7 @@ async def check_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Bot boshlanish komandasi"""
-    text = """🇰🇷 *Annyeonghaseyo!* 안녕하세요!
+    text = f"""🇰🇷 *Annyeonghaseyo!* 안녕하세요!
 
 Men *Korean Zone* kanalining yordamchi botiman!
 
@@ -313,10 +310,10 @@ Men *Korean Zone* kanalining yordamchi botiman!
 👋 Yangi a'zolarni kutib olish
 
 *Korean Zone kanaliga obuna bo'ling:*
-👉 @KoreanZoneUz
+👉 {CHANNEL_ID}
 
 *화이팅!* 💪"""
-    
+
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # ============================================================
@@ -325,7 +322,7 @@ Men *Korean Zone* kanalining yordamchi botiman!
 async def word_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Tasodifiy koreys so'zi ko'rsatish"""
     word_data = random.choice(KOREAN_WORDS)
-    
+
     text = f"""🇰🇷 *Koreys So'zi*
 
 ✨ *{word_data['word']}*
@@ -333,7 +330,7 @@ async def word_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 🇺🇿 {word_data['meaning']}
 
 📝 _{word_data['example']}_"""
-    
+
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # ============================================================
@@ -346,13 +343,13 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "❓ Savol yozing: /ask <savolingiz>\n\nMasalan: /ask annyeong so'zining ma'nosi nima?"
         )
         return
-    
+
     question = " ".join(context.args)
     await update.message.reply_text("⏳ Javob tayyorlanmoqda...")
-    
+
     prompt = f"Koreys tili haqida savol: {question}. O'zbek tilida qisqa va aniq javob ber."
     answer = await generate_ai_content(prompt)
-    
+
     await update.message.reply_text(f"🤖 *Javob:*\n\n{answer}", parse_mode="Markdown")
 
 # ============================================================
@@ -361,43 +358,36 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Botni ishga tushirish"""
     app = Application.builder().token(TELEGRAM_TOKEN).build()
-    
-    # Komandalar
+
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("word", word_command))
     app.add_handler(CommandHandler("ask", ask_command))
-    
-    # Yangi a'zo
+
     app.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
-    
-    # Spam tekshirish
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_spam))
-    
-    # JADVAL — Avtomatik postlar
+
     job_queue = app.job_queue
-    
-    # Har kuni soat 08:00 da kunlik so'z
+
     job_queue.run_daily(
         send_daily_word,
         time=time(hour=8, minute=0),
         name="daily_word"
     )
-    
-    # Har kuni soat 18:00 da viktorina
+
     job_queue.run_daily(
         send_daily_quiz,
         time=time(hour=18, minute=0),
         name="daily_quiz"
     )
-    
-    # Har dushanba soat 10:00 da grammatika
+
     job_queue.run_daily(
         send_weekly_grammar,
         time=time(hour=10, minute=0),
-        days=(0,),  # 0 = Dushanba
+        days=(0,),
         name="weekly_grammar"
     )
-    
+
     logger.info("Korean Zone Bot ishga tushdi! 🇰🇷")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
