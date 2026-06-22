@@ -57,37 +57,37 @@ KOREAN_WORDS = [
 GRAMMAR_LESSONS = [
     {
         "title": "이에요/예요 — 'Bu ... dir' konstruksiyasi",
-        "content": """📖 *Grammatika: 이에요/예요*
+        "content": """📖 Grammatika: 이에요/예요
 
 Bu konstruksiya inglizchada "is/am/are" ga o'xshaydi.
 
-*Qoida:*
-• Undosh bilan tugagan so'zdan keyin → *이에요*
-• Unli bilan tugagan so'zdan keyin → *예요*
+Qoida:
+• Undosh bilan tugagan so'zdan keyin → 이에요
+• Unli bilan tugagan so'zdan keyin → 예요
 
-*Misollar:*
+Misollar:
 • 학생이에요 — Men talabaman
 • 의사예요 — Men doktorman
 • 한국 사람이에요 — Men koreyslikman
 
-*Mashq:*
+Mashq:
 "Men o'qituvchiman" ni koreyschada qanday aytasiz?
 Javob: 선생님이에요 (Seonsaengnim-ieyo)""",
     },
     {
         "title": "을/를 — Tushum kelishigi",
-        "content": """📖 *Grammatika: 을/를 (Tushum kelishigi)*
+        "content": """📖 Grammatika: 을/를 (Tushum kelishigi)
 
-*Qoida:*
-• Undosh bilan tugagan so'zdan keyin → *을*
-• Unli bilan tugagan so'zdan keyin → *를*
+Qoida:
+• Undosh bilan tugagan so'zdan keyin → 을
+• Unli bilan tugagan so'zdan keyin → 를
 
-*Misollar:*
+Misollar:
 • 밥을 먹어요 — Ovqat yeyapman
 • 물을 마셔요 — Suv ichyapman
 • 음악을 들어요 — Musiqa tinglayapman
 
-*Eslab qoling:* Bu qo'shimcha harakat ob'ektini belgilaydi.""",
+Eslab qoling: Bu qo'shimcha harakat ob'ektini belgilaydi.""",
     },
 ]
 
@@ -123,14 +123,14 @@ async def send_daily_word(context: ContextTypes.DEFAULT_TYPE):
     """Har kuni ertalab yangi so'z yuborish"""
     word_data = random.choice(KOREAN_WORDS)
 
-    message = f"""🇰🇷 *Kunlik So'z — Word of the Day*
+    message = f"""🇰🇷 Kunlik So'z — Word of the Day
 
-✨ *{word_data['word']}*
-🔤 Talaffuz: _{word_data['romanization']}_
-🇺🇿 Ma'nosi: *{word_data['meaning']}*
+✨ {word_data['word']}
+🔤 Talaffuz: {word_data['romanization']}
+🇺🇿 Ma'nosi: {word_data['meaning']}
 
-📝 *Misol:*
-_{word_data['example']}_
+📝 Misol:
+{word_data['example']}
 
 ━━━━━━━━━━━━━━
 📚 {CHANNEL_ID} — Koreys tilini o'rganamiz!"""
@@ -138,8 +138,7 @@ _{word_data['example']}_
     try:
         await context.bot.send_message(
             chat_id=CHANNEL_ID,
-            text=message,
-            parse_mode="Markdown"
+            text=message
         )
         logger.info("Kunlik so'z yuborildi")
     except Exception as e:
@@ -152,9 +151,9 @@ async def send_weekly_grammar(context: ContextTypes.DEFAULT_TYPE):
     """Har hafta grammatika darsi yuborish"""
     lesson = random.choice(GRAMMAR_LESSONS)
 
-    message = f"""📚 *Haftalik Grammatika Darsi*
+    message = f"""📚 Haftalik Grammatika Darsi
 
-*{lesson['title']}*
+{lesson['title']}
 
 {lesson['content']}
 
@@ -164,8 +163,7 @@ async def send_weekly_grammar(context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_message(
             chat_id=CHANNEL_ID,
-            text=message,
-            parse_mode="Markdown"
+            text=message
         )
     except Exception as e:
         logger.error(f"Grammatika yuborishda xato: {e}")
@@ -215,9 +213,9 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         user = new_member.user
         name = user.first_name or "Do'st"
 
-        welcome_text = f"""🇰🇷 *Annyeonghaseyo, {name}!* 안녕하세요!
+        welcome_text = f"""🇰🇷 Annyeonghaseyo, {name}! 안녕하세요!
 
-*Korean Zone* kanaliga xush kelibsiz! 🌸
+Korean Zone kanaliga xush kelibsiz! 🌸
 
 Bu yerda siz topasiz:
 📚 Kunlik koreys so'zlari
@@ -226,10 +224,10 @@ Bu yerda siz topasiz:
 🎵 K-pop va drama yangiliklari
 🇰🇷 Koreya madaniyati haqida
 
-*Qayerdan boshlash kerak?*
+Qayerdan boshlash kerak?
 👇 Quyidagi postlarni ko'ring va o'rganishni boshlang!
 
-*화이팅!* (Hwaitingi!) — Omad! 💪
+화이팅! (Hwaitingi!) — Omad! 💪
 
 ━━━━━━━━━━━━━━
 📌 Admin: @Seulcom"""
@@ -237,8 +235,7 @@ Bu yerda siz topasiz:
         try:
             await context.bot.send_message(
                 chat_id=update.chat_member.chat.id,
-                text=welcome_text,
-                parse_mode="Markdown"
+                text=welcome_text
             )
         except Exception as e:
             logger.error(f"Xush kelibsiz xabarida xato: {e}")
@@ -298,23 +295,23 @@ async def check_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Bot boshlanish komandasi"""
-    text = f"""🇰🇷 *Annyeonghaseyo!* 안녕하세요!
+    text = f"""🇰🇷 Annyeonghaseyo! 안녕하세요!
 
-Men *Korean Zone* kanalining yordamchi botiman!
+Men Korean Zone kanalining yordamchi botiman!
 
-*Nima qila olaman:*
+Nima qila olaman:
 📚 Kunlik koreys so'zi
 🧩 Viktorina testlar  
 📖 Grammatika darslari
 🛡️ Spam himoya
 👋 Yangi a'zolarni kutib olish
 
-*Korean Zone kanaliga obuna bo'ling:*
+Korean Zone kanaliga obuna bo'ling:
 👉 {CHANNEL_ID}
 
-*화이팅!* 💪"""
+화이팅! 💪"""
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text)
 
 # ============================================================
 # /WORD KOMANDASI — MANUAL SO'Z
@@ -323,15 +320,15 @@ async def word_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Tasodifiy koreys so'zi ko'rsatish"""
     word_data = random.choice(KOREAN_WORDS)
 
-    text = f"""🇰🇷 *Koreys So'zi*
+    text = f"""🇰🇷 Koreys So'zi
 
-✨ *{word_data['word']}*
-🔤 _{word_data['romanization']}_
+✨ {word_data['word']}
+🔤 {word_data['romanization']}
 🇺🇿 {word_data['meaning']}
 
-📝 _{word_data['example']}_"""
+📝 {word_data['example']}"""
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text)
 
 # ============================================================
 # /ASK KOMANDASI — AI GA SAVOL
@@ -350,7 +347,7 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prompt = f"Koreys tili haqida savol: {question}. O'zbek tilida qisqa va aniq javob ber."
     answer = await generate_ai_content(prompt)
 
-    await update.message.reply_text(f"🤖 *Javob:*\n\n{answer}", parse_mode="Markdown")
+    await update.message.reply_text(f"🤖 Javob:\n\n{answer}")
 
 # ============================================================
 # ASOSIY FUNKSIYA
